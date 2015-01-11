@@ -44,9 +44,9 @@
 # add_index "tasks", ["seller_id", "seller_account_id", "serial_no"], name: "idx_by_seller_id_seller_account_id_and_serial_no", using: :btree
 # add_index "tasks", ["serial_no"], name: "idx_by_serial_no", using: :btree
 class Task < ActiveRecord::Base
+  belongs_to  :platform
   belongs_to  :issue
   belongs_to  :parent_issue,  class_name: "Issue"
-  belongs_to  :platform
   belongs_to  :seller,  class_name: "User"
   belongs_to  :buyer, class_name: "User"
   belongs_to  :seller_account,  class_name: "Account"

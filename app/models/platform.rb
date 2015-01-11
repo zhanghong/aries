@@ -11,4 +11,20 @@ class Platform < ActiveRecord::Base
   has_many  :issues
   has_many  :account_types
   has_many  :accounts
+
+  before_save :set_updater_id
+  before_update :set_updater_id
+
+  MAX_BINDED_COUNT = 3
+
+  # 用户可绑定账号的平台类型
+  def self.bindable(user)
+    return self.join(:accounts).where(["accounts.user_id = ?", user.id]).
+                group("platforms.id").having("COUNT(*) < #{MAX_BINDED_COUNT}").all
+  end
+private
+  # 设置更新用户ID
+  def set_updater_id
+    self.updater_id = User.current_id
+  end
 end

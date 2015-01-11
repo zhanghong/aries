@@ -12,8 +12,8 @@
 # add_index "task_products", ["buyer_id", "buyer_account_id", "seller_id", "seller_account_id"], name: "idx_by_byid_and_buyer_account_id_and_slid_seller_account_id", using: :btree
 class TaskProduct < ActiveRecord::Base
   belongs_to  :task
-  belongs_to  :buyer, class_name: "User"
   belongs_to  :buyer_account, class_name: "account"
-  belongs_to  :seller,  class_name: "User"
   belongs_to  :seller_account,  class_name: "account"
+  belongs_to  :buyer, class_name: "User"
+  belongs_to  :seller,  class_name: "User"
 end

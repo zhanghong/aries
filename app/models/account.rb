@@ -7,7 +7,7 @@
 #   t.string   "sub_name",        limit: 50,  default: "",                     comment: "账号辅助名，如银行卡的开户支行名，淘宝店铺掌柜ID"
 #   t.string   "receive_name",    limit: 30,  default: "",                     comment: "收货人姓名"
 #   t.string   "receive_phone",   limit: 15,  default: "",                     comment: "收货人手机"
-#   t.string   "status",          limit: 20,  default: "pinding",              comment: "状态"
+#   t.string   "state",          limit: 20,  default: "pinding",              comment: "状态"
 #   t.integer  "area_id",         limit: 4,   default: 0,                      comment: "收货地区"
 #   t.string   "area_name",       limit: 100, default: "",                     comment: "所在地区名"
 #   t.string   "home_page",       limit: 255, default: "",                     comment: "首页URL"
@@ -25,14 +25,43 @@
 # add_index "accounts", ["type", "user_id", "platform_id"], name: "idx_by_type_user_id_and_platform_id", using: :btree
 class Account < ActiveRecord::Base
   belongs_to  :user
-  belings_to  :account_type
-  belings_to  :platform
-  belings_to  :area
-  belings_to  :updater, class_name: "User"
+  belongs_to  :account_type
+  belongs_to  :platform
+  belongs_to  :area
+  belongs_to  :updater, class_name: "User"
 
+  has_many  :account_logs
   has_many  :buyer_task_products, class_name: "TaskProduct", foreign_key: "buyer_account_id"
   has_many  :seller_task_products, class_name: "TaskProduct", foreign_key: "seller_account_id"
   has_many  :seller_tasks,  class_name: "Task", foreign_key: "seller_account_id"
   has_many  :buyer_tasks,   class_name: "Task", foreign_key: "buyer_account_id"
-  has_many  :account_logs
+
+  before_save :set_updater_id
+  before_update :set_updater_id
+
+  state_machine :state, :initial => :actived do
+    event :active do
+      transition [:pinding, :freezed] => :actived
+    end
+
+    event :fail do
+      transition :pinding => :failed
+    end
+
+    event :freeze do
+      transition [:pinding, :actived] => :freezed
+    end
+
+    event :editable do
+      transition [:actived, :failed] => :editabled
+    end
+
+    before_transition do: :set_updater_id
+  end
+  
+private
+  # 设置更新用户ID
+  def set_updater_id
+    self.updater_id = User.current_id
+  end
 end

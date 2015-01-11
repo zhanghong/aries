@@ -15,4 +15,36 @@
 class Download < ActiveRecord::Base
   belongs_to  :user
   has_many    :download_logs
+
+  TARGET_TYPES = [["物流单", "logistic_order"], ["账务明细", "cash_log"]]
+
+  def save_export_file(target_type, params, headers, records)
+    book = Spreadsheet::Workbook.new
+    sheet = book.create_worksheet
+    odd_format = Spreadsheet::Format.new  :pattern_bg_color => "white", :color => "black", :pattern_fg_color => "white", :pattern => 1
+    even_format = Spreadsheet::Format.new :pattern_bg_color => "gray", :color => "white", :pattern_fg_color => "gray", :pattern => 1
+    title_format = Spreadsheet::Format.new :weight => :bold, :size => 18
+    bold = Spreadsheet::Format.new(:weight => :bold)
+
+    sheet.row(0).concat(headers.collect{|h| h.last})
+    records.each_with_index do |record, idx|
+      vals = []
+      headers.each_with_index do |attr_item, col|
+        vals << record.send(attr_item.first)
+      end
+
+      row_number = idx + 1
+      sheet.row(row_number).concat(vals)
+
+      if idx.even?
+        sheet.row(row_number).default_format = even_format
+      else
+        sheet.row(row_number).default_format = odd_format
+      end
+    end
+
+    file_path = File.join(Rails.root, "downloads/#{self.id}.xls")
+    book.write file_path
+    file_path
+  end
 end

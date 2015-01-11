@@ -47,13 +47,14 @@ class Issue < ActiveRecord::Base
   belongs_to  :parent,  class_name: "Issue"
   belongs_to  :template,  class_name: "Issue"
   
-  has_many    :children,  class_name: "Issue",  foreign_key: "parent_id"
-  has_many    :template_children, class_name: "Issue", foreign_key: "template_id"
   has_many    :tasks
-  has_many    :all_tasks, class_name: "Task", foreign_key: "parent_id"
   has_many    :property_ranges
   has_many    :products
   has_many    :issue_services
   has_many    :issue_schedulers
   has_many    :issue_logs
+  has_many    :children,  class_name: "Issue",  foreign_key: "parent_id"
+  has_many    :template_children, class_name: "Issue", foreign_key: "template_id"
+  has_many    :all_tasks, class_name: "Task", foreign_key: "parent_issue_id"
+ 
 end

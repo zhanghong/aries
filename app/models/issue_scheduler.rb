@@ -11,5 +11,5 @@
 # add_index "issue_schedulers", ["issue_id"], name: "idx_by_issue_id", using: :btree
 class IssueScheduler < ActiveRecord::Base
   belongs_to  :issue
-  belings_to  :updater, class_name: "User"
+  belongs_to  :updater, class_name: "User"
 end

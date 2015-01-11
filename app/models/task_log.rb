@@ -12,5 +12,5 @@
 # add_index "task_logs", ["task_id"], name: "idx_by_task_id", using: :btree
 class TaskLog < ActiveRecord::Base
   belongs_to  :task
-  belongs_to  :updater
+  belongs_to  :updater, class_name: "User"
 end

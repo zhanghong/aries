@@ -62,10 +62,10 @@ class User < ActiveRecord::Base
   belongs_to  :invitator,   class_name: "User"
   belongs_to  :freezer, class_name: "User"
 
-  has_one   :user_info
+  has_one   :user_info, foreign_key: "id"
   has_many  :user_logins
   has_many  :weibo_orders
-  has_many  :invitated_user,  class_name: "User", foreign_key: "invitator_id"
+  has_many  :invitated_users,  class_name: "User", foreign_key: "invitator_id"
   has_many  :buyer_task_products, class_name: "TaskProduct", foreign_key: "buyer_id"
   has_many  :seller_task_products, class_name: "TaskProduct", foreign_key: "seller_id"
   has_many  :seller_tasks,  class_name: "Task", foreign_key: "seller_id"

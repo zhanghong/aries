@@ -4,4 +4,9 @@
 # end
 class UniqueCode < ActiveRecord::Base
 
+  # 生成唯一码
+  def self.generate
+    item = create()
+    return item.id.to_s(16).upcase.rjust(6, "0")
+  end
 end

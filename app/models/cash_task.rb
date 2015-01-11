@@ -19,5 +19,5 @@
 # add_index "cash_tasks", ["type", "user_id", "serial_no"], name: "idx_by_type_user_id_and_serial_no", using: :btree
 class CashTask < ActiveRecord::Base
   belongs_to  :user
-  belings_to  :updater, class_name: "User"
+  belongs_to  :updater, class_name: "User"
 end

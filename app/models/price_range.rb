@@ -14,5 +14,5 @@
 # add_index "price_ranges", ["account_type_id", "task_type"], name: "idx_by_account_type_id_and_task_type", using: :btree
 class PriceRange < ActiveRecord::Base
   belongs_to  :account_type
-  belongs_to  :updater
+  belongs_to  :updater, class_name: "User"
 end
