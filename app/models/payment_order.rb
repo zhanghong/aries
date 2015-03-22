@@ -29,4 +29,32 @@
 # add_index "payment_orders", ["user_id", "related_type", "related_id"], name: "idx_by_user_id_and_related_type_and_related_id", using: :btree
 class PaymentOrder < ActiveRecord::Base
   belongs_to  :user
+  belongs_to  :user_info, foreign_key: "user_id"
+
+  # 订单支付有效时间（秒）
+  ACTIVED_SECONDS = 1200;
+
+  validates :user_id, presence: true
+  validates :related_type, presence: true
+  validates :related_id, presence: true
+  validates :flow_type, presence: true
+  validates :number,
+            :presence => true,
+            :numericality => {greater_than: 0}
+  validates :pay_expired_at, presence: true
+  validates :real_point, presence: true, :if => Proc.new { |p| p.real_cash.blank? }
+
+  before_save :set_auto_fields
+
+  state_machine :state, :initial => :pinding do
+    
+  end
+
+private
+  def set_auto_fields
+    self.total_cash = self.number * self.unit_cash
+    self.total_point = self.number * self.unit_point
+    self.real_cash = self.total_cash - self.discount_cash
+    self.real_point = self.total_point - self.discount_point
+  end
 end

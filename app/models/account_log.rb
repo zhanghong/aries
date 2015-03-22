@@ -10,4 +10,10 @@
 class AccountLog < ActiveRecord::Base
   belongs_to  :account
   belongs_to  :updater,   class_name: "User"
+
+private
+  # 设置更新用户ID
+  def set_updater_id
+    self.updater_id = User.current_id
+  end
 end

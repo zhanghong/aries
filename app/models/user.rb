@@ -80,4 +80,7 @@ class User < ActiveRecord::Base
   has_many  :source_cash_logs,  class_name: "CashLog",  foreign_key: "source_id"
   has_many  :target_cash_logs,  class_name: "CashLog",  foreign_key: "target_id"
   has_many  :operated_cash_logs,  class_name: "CashLog",  foreign_key: "operater_id"
+
+  # 系统账号ID
+  SYSTEM_ID = 1
 end

@@ -37,7 +37,7 @@ class LogisticOrder < ActiveRecord::Base
   end
 
   # 管理员搜索方法
-  def self.admin_find(params)
+  def self.find_mine(params)
     conditions = search_conditions(params)
     sort_str = search_sorts(params[:order_type])
     self.joins(:task, :seller_account, :buyer_account).where(conditions).order(sort_str)

@@ -5,15 +5,15 @@
 #   t.integer  "platform_id",     limit: 4,   default: 0,                      comment: "平台类型ID"
 #   t.string   "name",            limit: 50,  default: "",                     comment: "账号名"
 #   t.string   "sub_name",        limit: 50,  default: "",                     comment: "账号辅助名，如银行卡的开户支行名，淘宝店铺掌柜ID"
-#   t.string   "receive_name",    limit: 30,  default: "",                     comment: "收货人姓名"
-#   t.string   "receive_phone",   limit: 15,  default: "",                     comment: "收货人手机"
-#   t.string   "state",          limit: 20,  default: "pinding",              comment: "状态"
+#   t.string   "user_name",       limit: 30,  default: ""
+#   t.string   "user_phone",      limit: 15,  default: ""
+#   t.string   "status",          limit: 20,  default: "pinding",              comment: "状态"
 #   t.integer  "area_id",         limit: 4,   default: 0,                      comment: "收货地区"
 #   t.string   "area_name",       limit: 100, default: "",                     comment: "所在地区名"
 #   t.string   "home_page",       limit: 255, default: "",                     comment: "首页URL"
 #   t.string   "address",         limit: 255, default: "",                     comment: "收货地址"
 #   t.string   "zipcode",         limit: 8,   default: "",                     comment: "邮编"
-#   t.string   "picture",         limit: 255, default: "",                     comment: "截图URL"
+#   t.integer  "upload_id",       limit: 4,   default: 0,                      comment: "附件ID"
 #   t.string   "memo",            limit: 255, default: "",                     comment: "备注"
 #   t.string   "failed_reason",   limit: 255, default: "",                     comment: "审核失败原因"
 #   t.integer  "updater_id",      limit: 4,   default: 0,                      comment: "更新用户ID"
@@ -26,20 +26,23 @@
 class Account < ActiveRecord::Base
   belongs_to  :user
   belongs_to  :account_type
-  belongs_to  :platform
   belongs_to  :area
   belongs_to  :updater, class_name: "User"
 
   has_many  :account_logs
-  has_many  :buyer_task_products, class_name: "TaskProduct", foreign_key: "buyer_account_id"
-  has_many  :seller_task_products, class_name: "TaskProduct", foreign_key: "seller_account_id"
-  has_many  :seller_tasks,  class_name: "Task", foreign_key: "seller_account_id"
-  has_many  :buyer_tasks,   class_name: "Task", foreign_key: "buyer_account_id"
+
+  validates :user_id, presence: true
+  validates :account_type_id, presence: true
+  validates :name,  presence: true, uniqueness: {scope: [:user_id], conditions: -> { where(deleted_at: nil)}},
+                    length: {maximum: 50}
 
   before_save :set_updater_id
-  before_update :set_updater_id
+  before_save :set_area_name
 
-  state_machine :state, :initial => :actived do
+  STATUS = [["未审核", "pinding"], ["已审核", "actived"], ["审核失败", "failed"], ["已冻结", "freezed"], ["可编辑", "editabled"]]
+  FAILED_REASONS = [["该买号为危险账号，请修改绑号信息", "danger_account"], ["收货地址不真实，请修改绑号信息", "error_address"]]
+
+  state_machine :state, :initial => :pinding do
     event :active do
       transition [:pinding, :freezed] => :actived
     end
@@ -55,13 +58,68 @@ class Account < ActiveRecord::Base
     event :editable do
       transition [:actived, :failed] => :editabled
     end
-
-    before_transition do: :set_updater_id
   end
-  
+
+  def find_mine(params)
+    conditions = search_conditions(params)
+    order_str = search_sorts(params[:order_type])
+    self.join(:platform, :users).where()
+  end
 private
+  # 生成自定义查询的查询条件
+  # ======== 参数 ===========
+  # params(Hash) : 查询参数
+  # ======== 返回值 ===========
+  # return Array
+  def self.search_conditions(params)
+    conds = [[]]
+
+    if params.is_a?(Hash)
+      params.each do |key, val|
+        val = val.to_s.strip if val.is_a?(String)
+        next if val.blank?
+        case key.to_s
+        when "order_type"
+          next
+        when "id", "user_id", "state"
+          conds[0] << "accounts.#{key} = ?"
+          conds << val
+        when "vip_level"
+          conds[0] << "users.vip_months" = val
+        end
+      end
+    end
+
+    if conds.blank?
+      return []
+    else
+      conds[0] = conds[0].join(" AND ")
+      return conds
+    end
+  end
+
+  # 生成自定义查询的排序方式
+  # ======== 参数 ===========
+  # order_type(String) : 排序key
+  # ======== 返回值 ===========
+  # return String 
+  def self.search_sorts(order_type)
+    case order_type
+    when "id_asc"
+      "accounts.id ASC"
+    else
+      "accounts.id DESC"
+    end
+  end
+
   # 设置更新用户ID
   def set_updater_id
     self.updater_id = User.current_id
+  end
+
+  def set_area_name
+    if self.area_id.present?
+      self.area_name = self.area.full_name
+    end
   end
 end

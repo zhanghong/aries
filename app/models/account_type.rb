@@ -13,14 +13,13 @@
 # end
 # add_index "account_types", ["platform_id", "name"], name: "idx_by_platform_id_and_name", using: :btree
 class AccountType < ActiveRecord::Base
-  belongs_to  :platform
   belongs_to  :updater, class_name: "User"
-  has_many    :price_ranges
-  has_many    :issues
   has_many    :accounts
 
   before_save :set_updater_id
   before_update :set_updater_id
+
+  STATES = [["可用", "actived"], ["不可用", "disabled"]]
 
   state_machine :state, :initial => :actived do
     event :active do
@@ -34,16 +33,21 @@ class AccountType < ActiveRecord::Base
     before_transition do: :set_updater_id
   end
 
-  def self.user_find(params)
-    conditions = search_conditions(params)
-    where(conditions)
-  end
-
-  def self.admin_find(params)
+  # 自定义查询
+  # ======== 参数 ===========
+  # params(Hash) : 查询参数
+  # ======== 返回值 ===========
+  # return Array
+  def self.find_mine(params)
     conditions = search_conditions(params)
     where(conditions)
   end
 private
+  # 生成自定义查询的查询条件
+  # ======== 参数 ===========
+  # params(Hash) : 查询参数
+  # ======== 返回值 ===========
+  # return Array
   def self.search_conditions(params)
     conds = [[]]
 
@@ -67,13 +71,17 @@ private
     end
   end
 
-  # 搜索排序方式
+  # 生成自定义查询的排序方式
+  # ======== 参数 ===========
+  # order_type(String) : 排序key
+  # ======== 返回值 ===========
+  # return String 
   def self.search_sorts(order_type)
     case order_type
-    when "id_desc"
-      "id DESC"
+    when "id_asc"
+      "account_types.id ASC"
     else
-      "id ASC"
+      "account_types.id DESC"
     end
   end
 
