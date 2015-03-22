@@ -5,3 +5,18 @@
 #
 #   cities = City.create([{ name: 'Chicago' }, { name: 'Copenhagen' }])
 #   Mayor.create(name: 'Emanuel', city: cities.first)
+
+BklArea.all.each do |bkl|
+  area = Area.new
+  area.taobao_id = bkl.taobao_id
+  area.name = bkl.name
+  area.parent_id = bkl.parent_id
+  area.pinyin = bkl.pinyin
+  area.zipcode = bkl.zipcode
+  begin
+    area.save
+    puts "id: #{area.id}"
+  rescue
+    puts "bkl error: #{bkl.id}, name: #{bkl.name}"
+  end
+end
